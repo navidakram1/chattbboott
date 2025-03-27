@@ -1,21 +1,47 @@
 {
   "name": "travel-weather-assistant",
   "version": "1.0.0",
-  "description": "A chatbot that helps plan clothing requirements for multi-location trips based on weather data",
-  "main": "src/index.html",
+  "description": "A chatbot that helps plan clothing for multi-location trips based on weather",
+  "main": "src/js/chat.js",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/js/**/*.js",
+    "start": "serve src"
   },
+  "contributors": [
+    {
+      "name": "[Team Member 1]",
+      "role": "UI Development"
+    },
+    {
+      "name": "[Team Member 2]",
+      "role": "Chat Logic"
+    },
+    {
+      "name": "[Team Member 3]",
+      "role": "Weather Integration"
+    },
+    {
+      "name": "[Team Member 4]",
+      "role": "Testing"
+    }
+  ],
   "author": "Joy Lee",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@babel/preset-env": "^7.24.0",
+    "@testing-library/jest-dom": "^6.4.2",
     "babel-jest": "^29.7.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0"
+    "jest-environment-jsdom": "^29.7.0",
+    "serve": "^14.2.1"
+  },
+  "dependencies": {
+    "date-fns": "^3.3.1"
   },
   "jest": {
     "testEnvironment": "jsdom",
