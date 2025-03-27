@@ -1,58 +1,98 @@
-# Travel Weather Chatbot
+# Travel Weather Assistant
 
-A smart chatbot that helps plan clothing requirements for multi-location trips by integrating weather data.
+A chatbot that helps plan clothing requirements for multi-location trips based on weather data. The assistant can handle up to 5 locations across 3 days and provides weather-based clothing suggestions for each location.
 
 ## Features
 
-- Weather data integration for multiple locations
-- Trip planning assistance for 5 locations over 3 days
+- Weather API integration for real-time weather data
+- Trip planning with multiple locations
 - Smart clothing suggestions based on weather conditions
-- Modern and responsive UI
-- Real-time weather updates
+- Modern, responsive UI with dark mode support
+- Accessibility features
+- Comprehensive test coverage
 
 ## Team Members
 
-- Navid Akram - Weather API Integration
-- Benny Joy - Chat Logic and Core Functionality
-- Joy - UI/UX Development
+- Joy Lee
+  - Weather Service Implementation
+  - UI/UX Design
+  - Testing Framework
+  - Documentation
 
 ## Project Structure
 
 ```
 src/
-├── js/
-│   ├── weather.js      # Weather API integration
-│   ├── chat.js         # Core chat functionality
-│   ├── ui.js           # UI components and styling
-│   └── trip.js         # Trip planning logic
+├── index.html          # Main HTML file
 ├── css/
-│   └── styles.css      # Main stylesheet
-└── index.html          # Main application file
+│   └── styles.css     # Styling
+└── js/
+    ├── weather.js     # Weather API integration
+    ├── trip.js        # Trip planning logic
+    ├── chat.js        # Chat functionality
+    └── ui.js          # UI management
+
+tests/
+├── setup.js           # Test setup
+├── weather.test.js    # Weather service tests
+├── trip.test.js       # Trip planner tests
+├── chat.test.js       # Chat manager tests
+└── ui.test.js         # UI manager tests
 ```
 
 ## Setup
 
 1. Clone the repository
-2. Install dependencies (if any)
-3. Open index.html in a modern web browser
-
-## Development
-
-Each team member has their own feature branch:
-- `feature/navid-weather-api` - Weather integration
-- `feature/benny-chat-logic` - Chat functionality
-- `feature/joy-ui` - UI components
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your OpenWeatherMap API key in the weather service
+4. Run the tests:
+   ```bash
+   npm test
+   ```
 
 ## Testing
 
-The project includes unit tests for each component. Run tests using the testing framework.
+The project uses Jest for testing. Available test commands:
 
-## Milestones
+- `npm test`: Run all tests
+- `npm run test:watch`: Run tests in watch mode
+- `npm run test:coverage`: Generate test coverage report
 
-1. Basic Design and Functionality (20%)
-2. Core Features Implementation (20%)
-3. Complete Application (20%)
+## Features Implementation
+
+### Weather Service (weather.js)
+- API integration with OpenWeatherMap
+- Weather data processing
+- Clothing suggestions based on weather conditions
+- Forecast handling
+
+### Trip Planner (trip.js)
+- Location management (up to 5 locations)
+- Trip schedule generation
+- Day distribution logic
+
+### Chat Manager (chat.js)
+- User input handling
+- State management
+- Message history
+- Error handling
+
+### UI Manager (ui.js)
+- Responsive design
+- Dark mode support
+- Accessibility features
+- Animation handling
+
+## Contributing
+
+1. Create a new branch for your feature
+2. Make your changes
+3. Write/update tests
+4. Submit a pull request
 
 ## License
 
-This project is part of a university assignment. 
+MIT License 
