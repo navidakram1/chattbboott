@@ -19,6 +19,7 @@ class UIManager {
         this.userInput = document.getElementById('user-input');
         this.sendButton = document.getElementById('send-button');
         this.themeToggle = document.getElementById('theme-toggle');
+        this.suggestionsContainer = document.getElementById('suggestions-container');
         
         // Loading and status indicators
         this.loadingIndicator = document.createElement('div');
@@ -47,6 +48,13 @@ class UIManager {
         
         // Touch events for mobile
         this.setupTouchEvents();
+
+        // Add suggestion click handler
+        this.suggestionsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('suggestion-bubble')) {
+                this.handleSuggestionClick(e.target.textContent);
+            }
+        });
     }
 
     setupThemeSupport() {
@@ -187,6 +195,14 @@ class UIManager {
         
         this.messagesContainer.appendChild(messageElement);
         this.scrollToBottom();
+
+        // If it's a bot message, check for suggestions
+        if (!isUser) {
+            const suggestions = this.extractSuggestions(text);
+            if (suggestions.length > 0) {
+                this.showSuggestions(suggestions);
+            }
+        }
     }
 
     scrollToBottom() {
@@ -262,6 +278,66 @@ class UIManager {
         `;
         
         document.head.appendChild(style);
+    }
+
+    showSuggestions(suggestions) {
+        this.suggestionsContainer.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const bubble = document.createElement('div');
+            bubble.className = 'suggestion-bubble';
+            bubble.textContent = suggestion;
+            bubble.setAttribute('role', 'button');
+            bubble.setAttribute('tabindex', '0');
+            this.suggestionsContainer.appendChild(bubble);
+        });
+
+        // Add keyboard navigation for suggestions
+        const bubbles = this.suggestionsContainer.querySelectorAll('.suggestion-bubble');
+        bubbles.forEach(bubble => {
+            bubble.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    this.handleSuggestionClick(bubble.textContent);
+                }
+            });
+        });
+    }
+
+    handleSuggestionClick(suggestion) {
+        this.userInput.value = suggestion;
+        this.userInput.focus();
+        this.handleInputChange();
+        this.clearSuggestions();
+    }
+
+    clearSuggestions() {
+        this.suggestionsContainer.innerHTML = '';
+    }
+
+    extractSuggestions(text) {
+        const suggestions = [];
+        
+        // Common travel-related suggestions
+        if (text.toLowerCase().includes('location')) {
+            suggestions.push('Add London', 'Add Paris', 'Add New York', 'Add Tokyo', 'Add Sydney');
+        }
+        
+        // Weather-related suggestions
+        if (text.toLowerCase().includes('weather')) {
+            suggestions.push('Check weather', 'Show forecast', 'Weather details');
+        }
+        
+        // Trip planning suggestions
+        if (text.toLowerCase().includes('plan')) {
+            suggestions.push('Start planning', 'Show itinerary', 'Review plan');
+        }
+        
+        // Clothing suggestions
+        if (text.toLowerCase().includes('clothing') || text.toLowerCase().includes('wear')) {
+            suggestions.push('Summer clothes', 'Winter clothes', 'Rain gear', 'Formal wear');
+        }
+
+        return suggestions;
     }
 }
 

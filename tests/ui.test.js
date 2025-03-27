@@ -131,4 +131,73 @@ describe('UIManager', () => {
         expect(uiManager.sendButton.getAttribute('aria-label')).toBe('Send message');
         expect(uiManager.themeToggle.getAttribute('aria-label')).toBe('Toggle theme');
     });
+});
+
+describe('Suggestion functionality', () => {
+    let uiManager;
+
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <div id="chat-container">
+                <div id="messages"></div>
+                <div id="suggestions-container"></div>
+                <div id="input-container">
+                    <textarea id="user-input"></textarea>
+                    <button id="send-button"></button>
+                </div>
+            </div>
+        `;
+        uiManager = new UIManager();
+    });
+
+    test('should extract suggestions from bot messages', () => {
+        const locationText = 'Please add a location to your trip.';
+        const weatherText = 'Here is the weather forecast.';
+        const planText = 'Let\'s start planning your trip.';
+        const clothingText = 'Here are clothing suggestions.';
+
+        expect(uiManager.extractSuggestions(locationText)).toContain('Add London');
+        expect(uiManager.extractSuggestions(weatherText)).toContain('Check weather');
+        expect(uiManager.extractSuggestions(planText)).toContain('Start planning');
+        expect(uiManager.extractSuggestions(clothingText)).toContain('Summer clothes');
+    });
+
+    test('should show suggestions when bot message contains triggers', () => {
+        uiManager.addMessage('Please add a location to your trip.', false);
+        const suggestions = document.querySelectorAll('.suggestion-bubble');
+        expect(suggestions.length).toBeGreaterThan(0);
+    });
+
+    test('should handle suggestion click', () => {
+        uiManager.showSuggestions(['Test suggestion']);
+        const suggestion = document.querySelector('.suggestion-bubble');
+        suggestion.click();
+        
+        expect(uiManager.userInput.value).toBe('Test suggestion');
+        expect(document.querySelectorAll('.suggestion-bubble').length).toBe(0);
+    });
+
+    test('should handle keyboard navigation for suggestions', () => {
+        uiManager.showSuggestions(['Test suggestion']);
+        const suggestion = document.querySelector('.suggestion-bubble');
+        
+        suggestion.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter' }));
+        expect(uiManager.userInput.value).toBe('Test suggestion');
+    });
+
+    test('should clear suggestions', () => {
+        uiManager.showSuggestions(['Test suggestion']);
+        expect(document.querySelectorAll('.suggestion-bubble').length).toBe(1);
+        
+        uiManager.clearSuggestions();
+        expect(document.querySelectorAll('.suggestion-bubble').length).toBe(0);
+    });
+
+    test('should add ARIA attributes to suggestions', () => {
+        uiManager.showSuggestions(['Test suggestion']);
+        const suggestion = document.querySelector('.suggestion-bubble');
+        
+        expect(suggestion.getAttribute('role')).toBe('button');
+        expect(suggestion.getAttribute('tabindex')).toBe('0');
+    });
 }); 
