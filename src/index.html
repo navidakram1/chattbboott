@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Weather Chatbot</title>
+    <meta name="description" content="Weather-aware travel chatbot that helps plan trips and suggest appropriate clothing">
+    <title>Travel Weather Assistant</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
@@ -263,43 +269,34 @@
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">
-            <div class="bot-avatar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                </svg>
-            </div>
-            <div class="bot-info">
-                <h1>Travel Weather Assistant</h1>
-                <div class="status">Online</div>
-            </div>
-        </div>
+        <header class="chat-header">
+            <h1 class="chat-title">Travel Weather Assistant</h1>
+            <button id="theme-toggle" aria-label="Toggle dark mode">
+                <span class="material-icons">dark_mode</span>
+            </button>
+        </header>
 
-        <div id="messages">
-            <!-- Messages will be added here -->
-        </div>
+        <main id="messages" role="log" aria-label="Chat messages">
+            <!-- Messages will be dynamically added here -->
+        </main>
 
         <div id="input-container">
-            <textarea
-                id="user-input"
+            <textarea 
+                id="user-input" 
                 placeholder="Type your message..."
+                aria-label="Type your message"
                 rows="1"
-                aria-label="Message input"
             ></textarea>
-            <div class="action-buttons">
-                <button id="send-button" aria-label="Send message">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
-                </button>
-            </div>
+            <button id="send-button" aria-label="Send message">
+                <span class="material-icons">send</span>
+            </button>
         </div>
     </div>
 
-    <!-- Load JavaScript files -->
+    <!-- Scripts -->
     <script src="js/weather.js"></script>
     <script src="js/trip.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/chat.js"></script>
-    <script src="js/tests.js"></script>
 </body>
 </html> 
