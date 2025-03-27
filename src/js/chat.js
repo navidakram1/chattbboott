@@ -15,8 +15,9 @@ class ChatManager {
         this.currentState = 'initial'; // initial, collecting_locations, planning
 
         // Initialize services
-        this.weatherService = window.weatherService;
-        this.tripPlanner = window.tripPlanner;
+        this.weatherManager = new WeatherManager();
+        this.tripManager = new TripManager();
+        this.locationConfirmations = new Map();
 
         // Bind event listeners
         this.initializeEventListeners();
@@ -52,94 +53,235 @@ class ChatManager {
             this.isProcessing = true;
             this.addMessage(text, true);
             this.clearInput();
-            await this.processUserInput(text);
+            await this.processMessage(text);
         }
     }
 
-    async processUserInput(text) {
+    async processMessage(message) {
+        message = message.trim().toLowerCase();
+        
         try {
             switch (this.currentState) {
                 case 'initial':
-                    await this.handleInitialState(text);
-                    break;
+                    return this.handleInitialState(message);
                 case 'collecting_locations':
-                    await this.handleLocationCollection(text);
-                    break;
-                case 'planning':
-                    await this.handlePlanning(text);
-                    break;
+                    return this.handleLocationCollection(message);
+                case 'confirming_location':
+                    return this.handleLocationConfirmation(message);
+                case 'weather_details':
+                    return this.handleWeatherDetails(message);
+                case 'clothing_suggestions':
+                    return this.handleClothingSuggestions(message);
+                case 'trip_planning':
+                    return this.handleTripPlanning(message);
+                default:
+                    return this.handleGeneralInput(message);
             }
         } catch (error) {
-            this.addMessage('I apologize, but I encountered an error. Please try again.', false);
-            console.error('Error processing input:', error);
-        } finally {
-            this.isProcessing = false;
-            this.setInputState(true);
+            console.error('Error processing message:', error);
+            return 'I apologize, but I encountered an error. Please try again.';
         }
     }
 
-    async handleInitialState(text) {
-        if (text.toLowerCase().includes('plan trip') || text.toLowerCase().includes('help')) {
+    async handleInitialState(message) {
+        if (message.includes('help') || message.includes('start')) {
             this.currentState = 'collecting_locations';
-            this.addMessage('I\'ll help you plan your trip! Please enter the first location you want to visit.', false);
-        } else {
-            this.addMessage('I can help you plan your trip. Just say "plan trip" or "help" to get started!', false);
+            return `I'll help you plan your trip! Please tell me the first location you'd like to visit.
+You can add up to 5 locations, and I'll help you plan appropriate clothing based on the weather.`;
         }
-    }
-
-    async handleLocationCollection(text) {
-        const locations = this.tripPlanner.getLocations();
         
-        if (text.toLowerCase() === 'done' && locations.length > 0) {
-            this.currentState = 'planning';
-            await this.generateTripPlan();
-        } else if (this.tripPlanner.addLocation(text)) {
-            const remaining = 5 - locations.length;
-            const message = remaining > 0 
-                ? `Great! ${text} has been added. You can add ${remaining} more location(s) or type "done" to finish.`
-                : 'Great! Type "done" to finish.';
-            this.addMessage(message, false);
-        } else {
-            this.addMessage('Sorry, you can only add up to 5 locations. Type "done" to proceed with planning.', false);
+        if (this.isLocationInput(message)) {
+            this.currentState = 'collecting_locations';
+            return this.handleLocationCollection(message);
         }
-    }
-
-    async handlePlanning(text) {
-        if (text.toLowerCase() === 'restart') {
-            this.tripPlanner = new TripPlanner();
-            this.currentState = 'initial';
-            this.addMessage('Let\'s start over! How can I help you?', false);
-        } else {
-            this.addMessage('Type "restart" to plan a new trip or ask specific questions about the current plan.', false);
-        }
-    }
-
-    async generateTripPlan() {
-        const plan = this.tripPlanner.generateTripPlan();
-        if (!plan) {
-            this.addMessage('Sorry, I couldn\'t generate a plan. Let\'s try again!', false);
-            return;
-        }
-
-        let response = 'Here\'s your trip plan:\n\n';
         
-        for (const day of plan.schedule) {
-            response += `Day ${day.day}:\n`;
-            for (const location of day.locations) {
-                try {
-                    const weather = await this.weatherService.getWeatherData(location);
-                    const suggestions = this.weatherService.getClothingSuggestion(weather);
-                    
-                    response += `- ${location}: ${weather.temperature}°C, ${weather.condition}\n`;
-                    response += `  Suggested clothing: ${suggestions.join(', ')}\n`;
-                } catch (error) {
-                    response += `- ${location}: Weather data unavailable\n`;
-                }
+        return `Welcome! I can help you plan your trip and suggest appropriate clothing based on the weather.
+Would you like to start planning your trip? Just say "help" or "start", or directly enter your first destination.`;
+    }
+
+    async handleLocationCollection(message) {
+        if (message.includes('done') || message.includes('finish')) {
+            if (window.uiManager.locations.size === 0) {
+                return "You haven't added any locations yet. Please tell me where you'd like to go.";
             }
-            response += '\n';
+            this.currentState = 'weather_details';
+            return this.generateWeatherSummary();
         }
 
-        this.addMessage(response, false);
+        if (this.isLocationInput(message)) {
+            this.locationConfirmations.set(message, null);
+            this.currentState = 'confirming_location';
+            return `I found ${message}. The current weather there is ${this.weatherManager.getWeatherData(message).description} with a temperature of ${this.weatherManager.getWeatherData(message).temperature}°C.
+Is this the location you meant? (Yes/No)`;
+        }
+
+        return "Please tell me a location you'd like to visit, or say 'done' if you've finished adding locations.";
+    }
+
+    handleLocationConfirmation(message) {
+        if (message.includes('yes') || message.includes('correct')) {
+            const weatherData = this.locationConfirmations.get(this.locationConfirmations.keys().next().value);
+            if (window.uiManager.addLocation(this.locationConfirmations.keys().next().value)) {
+                this.currentState = 'collecting_locations';
+                const remainingSlots = 5 - window.uiManager.locations.size;
+                return remainingSlots > 0
+                    ? `Great! I've added ${this.locationConfirmations.keys().next().value}. You can add ${remainingSlots} more location${remainingSlots > 1 ? 's' : ''}. Where else would you like to go?`
+                    : "Perfect! You've added all 5 locations. Let me get the weather details for your trip.";
+            }
+            return "You've reached the maximum number of locations. Let's proceed with weather analysis.";
+        }
+        
+        if (message.includes('no') || message.includes('wrong')) {
+            this.currentState = 'collecting_locations';
+            return "No problem. Please try entering the location again, perhaps with more specific details.";
+        }
+
+        return "Please confirm if this is the correct location with 'yes' or 'no'.";
+    }
+
+    async handleWeatherDetails(message) {
+        if (message.includes('clothing') || message.includes('wear')) {
+            this.currentState = 'clothing_suggestions';
+            return this.generateClothingSuggestions();
+        }
+
+        if (message.includes('plan') || message.includes('itinerary')) {
+            this.currentState = 'trip_planning';
+            return this.tripManager.generateItinerary(Array.from(window.uiManager.locations));
+        }
+
+        if (message.includes('temperature') || message.includes('weather')) {
+            return this.generateWeatherSummary();
+        }
+
+        return `Here's what you can do next:
+1. Ask about clothing suggestions
+2. Get detailed weather information
+3. Plan your trip itinerary
+What would you like to know more about?`;
+    }
+
+    async generateWeatherSummary() {
+        const summaries = [];
+        for (const location of window.uiManager.locations) {
+            try {
+                const weather = await this.weatherManager.getWeatherData(location);
+                summaries.push(`${location}: ${weather.description}, ${weather.temperature}°C`);
+            } catch (error) {
+                summaries.push(`${location}: Weather data unavailable`);
+            }
+        }
+        
+        return `Here's the weather summary for your destinations:
+${summaries.join('\n')}
+
+Would you like to:
+1. Get clothing suggestions
+2. Plan your trip itinerary
+3. See more weather details`;
+    }
+
+    async generateClothingSuggestions() {
+        const suggestions = [];
+        for (const location of window.uiManager.locations) {
+            try {
+                const weather = await this.weatherManager.getWeatherData(location);
+                const clothing = this.getClothingForWeather(weather);
+                suggestions.push(`${location}:
+- ${clothing.join('\n- ')}`);
+            } catch (error) {
+                suggestions.push(`${location}: Unable to generate clothing suggestions`);
+            }
+        }
+        
+        return `Here are your clothing suggestions:
+${suggestions.join('\n\n')}
+
+Would you like to:
+1. See the weather details again
+2. Plan your trip itinerary
+3. Add or remove locations`;
+    }
+
+    getClothingForWeather(weather) {
+        const temp = weather.temperature;
+        const conditions = weather.description.toLowerCase();
+        const suggestions = [];
+
+        // Temperature-based suggestions
+        if (temp > 25) {
+            suggestions.push('Light, breathable clothing');
+            suggestions.push('Sun hat');
+            suggestions.push('Sunglasses');
+        } else if (temp > 15) {
+            suggestions.push('Light layers');
+            suggestions.push('Light jacket or sweater');
+        } else if (temp > 5) {
+            suggestions.push('Warm layers');
+            suggestions.push('Medium-weight jacket');
+            suggestions.push('Long pants');
+        } else {
+            suggestions.push('Heavy winter coat');
+            suggestions.push('Thermal layers');
+            suggestions.push('Winter accessories (hat, gloves, scarf)');
+        }
+
+        // Weather condition based suggestions
+        if (conditions.includes('rain')) {
+            suggestions.push('Waterproof jacket');
+            suggestions.push('Waterproof shoes');
+            suggestions.push('Umbrella');
+        } else if (conditions.includes('snow')) {
+            suggestions.push('Snow boots');
+            suggestions.push('Waterproof pants');
+        } else if (conditions.includes('wind')) {
+            suggestions.push('Windbreaker');
+        } else if (conditions.includes('sun') || conditions.includes('clear')) {
+            suggestions.push('Sunscreen');
+        }
+
+        return suggestions;
+    }
+
+    handleTripPlanning(message) {
+        if (message.includes('weather')) {
+            this.currentState = 'weather_details';
+            return this.generateWeatherSummary();
+        }
+
+        if (message.includes('clothing')) {
+            this.currentState = 'clothing_suggestions';
+            return this.generateClothingSuggestions();
+        }
+
+        return this.tripManager.handleTripCommand(message);
+    }
+
+    handleGeneralInput(message) {
+        if (message.includes('help')) {
+            return `I can help you with:
+1. Planning your trip itinerary
+2. Checking weather conditions
+3. Suggesting appropriate clothing
+4. Managing your locations
+
+What would you like to do?`;
+        }
+
+        if (this.isLocationInput(message)) {
+            this.currentState = 'collecting_locations';
+            return this.handleLocationCollection(message);
+        }
+
+        return "I'm not sure what you'd like to do. Try asking for 'help' to see what I can do.";
+    }
+
+    isLocationInput(message) {
+        // Simple location validation - can be enhanced with more sophisticated checks
+        return message.length > 2 && 
+               !message.includes('help') && 
+               !message.includes('yes') && 
+               !message.includes('no');
     }
 
     addMessage(text, isUser = false) {

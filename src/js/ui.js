@@ -5,268 +5,264 @@
 
 class UIManager {
     constructor() {
-        this.initializeElements();
-        this.setupEventListeners();
-        this.setupThemeSupport();
-        this.initializeAnimations();
-    }
-
-    initializeElements() {
-        // Main containers
-        this.chatContainer = document.getElementById('chat-container');
         this.messagesContainer = document.getElementById('messages');
-        this.inputContainer = document.getElementById('input-container');
         this.userInput = document.getElementById('user-input');
         this.sendButton = document.getElementById('send-button');
+        this.clearButton = document.getElementById('clear-button');
         this.themeToggle = document.getElementById('theme-toggle');
+        this.suggestionsContainer = document.getElementById('suggestions-container');
+        this.locationList = document.getElementById('location-list');
+        this.loadingOverlay = document.getElementById('loading-overlay');
+        this.errorToast = document.getElementById('error-toast');
+        this.charCount = document.getElementById('char-count');
+        this.progressSteps = document.querySelectorAll('.progress-step');
         
-        // Loading and status indicators
-        this.loadingIndicator = document.createElement('div');
-        this.loadingIndicator.className = 'loading-indicator';
-        this.loadingIndicator.innerHTML = '<div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div>';
+        this.currentStep = 1;
+        this.maxLocations = 5;
+        this.locations = new Set();
         
-        // Error message container
-        this.errorContainer = document.createElement('div');
-        this.errorContainer.className = 'error-container';
-        
-        // Accessibility features
-        this.setupAccessibility();
+        this.initializeEventListeners();
+        this.initializeTheme();
+        this.showWelcomeMessage();
     }
 
-    setupEventListeners() {
-        // Input handling
-        this.userInput.addEventListener('input', () => this.handleInputChange());
-        this.userInput.addEventListener('keypress', (e) => this.handleKeyPress(e));
-        this.sendButton.addEventListener('click', () => this.handleSendClick());
-        
+    initializeEventListeners() {
         // Theme toggle
         this.themeToggle.addEventListener('click', () => this.toggleTheme());
-        
-        // Responsive design
-        window.addEventListener('resize', () => this.handleResize());
-        
-        // Touch events for mobile
-        this.setupTouchEvents();
-    }
 
-    setupThemeSupport() {
-        // Theme management
-        this.currentTheme = localStorage.getItem('theme') || 'light';
-        document.body.setAttribute('data-theme', this.currentTheme);
-        
-        // Color scheme preference
-        this.setupColorSchemeListener();
-    }
-
-    setupColorSchemeListener() {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        mediaQuery.addListener((e) => {
-            if (!localStorage.getItem('theme')) {
-                this.currentTheme = e.matches ? 'dark' : 'light';
-                document.body.setAttribute('data-theme', this.currentTheme);
-            }
+        // Input handling
+        this.userInput.addEventListener('input', () => {
+            this.updateCharCount();
+            this.adjustTextareaHeight();
         });
-    }
-
-    setupAccessibility() {
-        // ARIA labels
-        this.userInput.setAttribute('aria-label', 'Message input');
-        this.sendButton.setAttribute('aria-label', 'Send message');
-        this.themeToggle.setAttribute('aria-label', 'Toggle theme');
+        this.userInput.addEventListener('keydown', (e) => this.handleInputKeydown(e));
         
-        // Focus management
-        this.setupFocusTrap();
-    }
+        // Button clicks
+        this.sendButton.addEventListener('click', () => this.handleSend());
+        this.clearButton.addEventListener('click', () => this.clearInput());
 
-    setupFocusTrap() {
-        const focusableElements = this.chatContainer.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+        // Suggestions container
+        this.suggestionsContainer.addEventListener('click', (e) => this.handleSuggestionClick(e));
         
-        if (focusableElements.length > 0) {
-            const firstFocusable = focusableElements[0];
-            const lastFocusable = focusableElements[focusableElements.length - 1];
-            
-            this.chatContainer.addEventListener('keydown', (e) => {
-                if (e.key === 'Tab') {
-                    if (e.shiftKey && document.activeElement === firstFocusable) {
-                        e.preventDefault();
-                        lastFocusable.focus();
-                    } else if (!e.shiftKey && document.activeElement === lastFocusable) {
-                        e.preventDefault();
-                        firstFocusable.focus();
-                    }
-                }
-            });
-        }
+        // Location list
+        this.locationList.addEventListener('click', (e) => this.handleLocationRemove(e));
     }
 
-    setupTouchEvents() {
-        let touchStartY = 0;
-        this.messagesContainer.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-        });
-        
-        this.messagesContainer.addEventListener('touchmove', (e) => {
-            const touchY = e.touches[0].clientY;
-            const scrollTop = this.messagesContainer.scrollTop;
-            
-            if (scrollTop === 0 && touchY > touchStartY) {
-                e.preventDefault(); // Prevent pull-to-refresh
-            }
-        });
-    }
-
-    handleInputChange() {
-        // Auto-resize input
-        this.userInput.style.height = 'auto';
-        this.userInput.style.height = (this.userInput.scrollHeight) + 'px';
-        
-        // Enable/disable send button
-        this.sendButton.disabled = !this.userInput.value.trim();
-    }
-
-    handleKeyPress(event) {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            this.handleSendClick();
-        }
-    }
-
-    handleSendClick() {
-        const message = this.userInput.value.trim();
-        if (message) {
-            this.addMessage(message, true);
-            this.userInput.value = '';
-            this.handleInputChange();
-            
-            // Notify chat manager
-            if (window.chatManager) {
-                window.chatManager.handleUserInput(message);
-            }
-        }
-    }
-
-    handleResize() {
-        // Adjust UI for different screen sizes
-        this.updateLayout();
-        
-        // Update scroll position
-        this.scrollToBottom();
-    }
-
-    updateLayout() {
-        const isMobile = window.innerWidth <= 768;
-        this.chatContainer.classList.toggle('mobile-layout', isMobile);
-        this.inputContainer.classList.toggle('mobile-input', isMobile);
+    initializeTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.body.setAttribute('data-theme', savedTheme);
+        this.themeToggle.querySelector('.material-icons').textContent = 
+            savedTheme === 'dark' ? 'light_mode' : 'dark_mode';
     }
 
     toggleTheme() {
-        this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', this.currentTheme);
-        localStorage.setItem('theme', this.currentTheme);
+        const currentTheme = document.body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        this.themeToggle.querySelector('.material-icons').textContent = 
+            newTheme === 'dark' ? 'light_mode' : 'dark_mode';
     }
 
-    addMessage(text, isUser = false) {
-        const messageElement = document.createElement('div');
-        messageElement.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-        
-        const contentElement = document.createElement('div');
-        contentElement.className = 'message-content';
-        contentElement.textContent = text;
-        
-        const timestampElement = document.createElement('div');
-        timestampElement.className = 'message-timestamp';
-        timestampElement.textContent = new Date().toLocaleTimeString();
-        
-        messageElement.appendChild(contentElement);
-        messageElement.appendChild(timestampElement);
-        
-        // Add animation class
-        messageElement.classList.add('message-appear');
-        
-        this.messagesContainer.appendChild(messageElement);
-        this.scrollToBottom();
+    updateCharCount() {
+        const length = this.userInput.value.length;
+        this.charCount.textContent = `${length}/500`;
+        this.sendButton.disabled = length === 0;
     }
 
-    scrollToBottom() {
-        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    adjustTextareaHeight() {
+        this.userInput.style.height = 'auto';
+        this.userInput.style.height = `${Math.min(this.userInput.scrollHeight, 120)}px`;
     }
 
-    showLoading() {
-        this.messagesContainer.appendChild(this.loadingIndicator);
-        this.scrollToBottom();
-    }
-
-    hideLoading() {
-        if (this.loadingIndicator.parentNode === this.messagesContainer) {
-            this.messagesContainer.removeChild(this.loadingIndicator);
+    handleInputKeydown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.handleSend();
         }
     }
 
-    showError(message) {
-        this.errorContainer.textContent = message;
-        this.errorContainer.classList.add('show');
+    async handleSend() {
+        const message = this.userInput.value.trim();
+        if (!message) return;
+
+        this.addMessage(message, 'user');
+        this.clearInput();
+        this.clearSuggestions();
+
+        try {
+            this.showLoading();
+            const response = await this.processUserInput(message);
+            this.hideLoading();
+            this.addMessage(response, 'bot');
+        } catch (error) {
+            this.hideLoading();
+            this.showError('Sorry, there was an error processing your message.');
+            console.error('Error:', error);
+        }
+    }
+
+    clearInput() {
+        this.userInput.value = '';
+        this.updateCharCount();
+        this.adjustTextareaHeight();
+    }
+
+    addMessage(content, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}-message`;
+        messageDiv.textContent = content;
         
+        this.messagesContainer.appendChild(messageDiv);
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+
+        if (type === 'bot') {
+            const suggestions = this.extractSuggestions(content);
+            if (suggestions.length > 0) {
+                this.showSuggestions(suggestions);
+            }
+        }
+    }
+
+    showSuggestions(suggestions) {
+        this.clearSuggestions();
+        suggestions.forEach((suggestion, index) => {
+            const bubble = document.createElement('button');
+            bubble.className = 'suggestion-bubble';
+            bubble.textContent = suggestion;
+            bubble.setAttribute('role', 'option');
+            bubble.setAttribute('tabindex', '0');
+            bubble.setAttribute('data-suggestion-index', index.toString());
+            
+            this.suggestionsContainer.appendChild(bubble);
+        });
+    }
+
+    handleSuggestionClick(e) {
+        const bubble = e.target.closest('.suggestion-bubble');
+        if (!bubble) return;
+
+        this.userInput.value = bubble.textContent;
+        this.updateCharCount();
+        this.adjustTextareaHeight();
+        this.clearSuggestions();
+    }
+
+    clearSuggestions() {
+        this.suggestionsContainer.innerHTML = '';
+    }
+
+    addLocation(location) {
+        if (this.locations.size >= this.maxLocations) {
+            this.showError('Maximum number of locations reached');
+            return false;
+        }
+
+        if (this.locations.has(location)) {
+            this.showError('This location is already added');
+            return false;
+        }
+
+        this.locations.add(location);
+        this.updateLocationList();
+        this.updateProgress();
+        return true;
+    }
+
+    updateLocationList() {
+        this.locationList.innerHTML = '';
+        this.locations.forEach(location => {
+            const locationItem = document.createElement('div');
+            locationItem.className = 'location-item';
+            locationItem.innerHTML = `
+                <span class="material-icons">place</span>
+                ${location}
+                <button class="icon-button" data-location="${location}" aria-label="Remove ${location}">
+                    <span class="material-icons">close</span>
+                </button>
+            `;
+            this.locationList.appendChild(locationItem);
+        });
+    }
+
+    handleLocationRemove(e) {
+        const removeButton = e.target.closest('[data-location]');
+        if (!removeButton) return;
+
+        const location = removeButton.dataset.location;
+        this.locations.delete(location);
+        this.updateLocationList();
+        this.updateProgress();
+    }
+
+    updateProgress() {
+        const progress = Math.min(Math.ceil((this.locations.size / this.maxLocations) * 3), 3);
+        this.progressSteps.forEach((step, index) => {
+            step.classList.toggle('active', index + 1 <= progress);
+        });
+    }
+
+    showLoading() {
+        this.loadingOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    hideLoading() {
+        this.loadingOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    showError(message) {
+        this.errorToast.textContent = message;
+        this.errorToast.setAttribute('aria-hidden', 'false');
         setTimeout(() => {
-            this.errorContainer.classList.remove('show');
+            this.errorToast.setAttribute('aria-hidden', 'true');
         }, 3000);
     }
 
-    initializeAnimations() {
-        // Add CSS animations
-        const style = document.createElement('style');
-        style.textContent = `
-            .message-appear {
-                animation: messageAppear 0.3s ease-out;
-            }
-            
-            @keyframes messageAppear {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .loading-indicator {
-                text-align: center;
-                margin: 10px;
-            }
-            
-            .loading-indicator > div {
-                width: 10px;
-                height: 10px;
-                background-color: var(--text-color);
-                border-radius: 50%;
-                display: inline-block;
-                margin: 0 3px;
-                animation: bounce 1.4s infinite ease-in-out both;
-            }
-            
-            .loading-indicator .bounce1 {
-                animation-delay: -0.32s;
-            }
-            
-            .loading-indicator .bounce2 {
-                animation-delay: -0.16s;
-            }
-            
-            @keyframes bounce {
-                0%, 80%, 100% { transform: scale(0); }
-                40% { transform: scale(1.0); }
-            }
-        `;
+    showWelcomeMessage() {
+        const welcomeMessage = `Welcome to the Travel Weather Assistant! 👋
+I can help you plan your trip and suggest appropriate clothing based on the weather.
+Where would you like to travel?`;
+        this.addMessage(welcomeMessage, 'bot');
+    }
+
+    extractSuggestions(message) {
+        const suggestions = [];
         
-        document.head.appendChild(style);
+        // Location suggestions
+        if (message.toLowerCase().includes('where would you like to travel')) {
+            suggestions.push('London', 'Paris', 'New York', 'Tokyo', 'Sydney');
+        }
+        
+        // Weather-related suggestions
+        if (message.toLowerCase().includes('weather')) {
+            suggestions.push('Show forecast', 'Temperature range', 'Precipitation chance');
+        }
+        
+        // Trip planning suggestions
+        if (message.toLowerCase().includes('plan')) {
+            suggestions.push('Add location', 'Remove location', 'Show itinerary');
+        }
+        
+        // Clothing suggestions
+        if (message.toLowerCase().includes('clothing') || message.toLowerCase().includes('wear')) {
+            suggestions.push('Summer clothes', 'Winter clothes', 'Rain gear');
+        }
+        
+        return suggestions;
+    }
+
+    async processUserInput(message) {
+        // This is a placeholder for the actual processing logic
+        // In a real implementation, this would interact with the ChatBot class
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve(`I received your message: "${message}". How else can I help you?`);
+            }, 1000);
+        });
     }
 }
 
-// Initialize UI
-const uiManager = new UIManager();
-
-// Export for other modules
-window.uiManager = uiManager; 
+// Initialize the UI manager when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.uiManager = new UIManager();
+}); 
