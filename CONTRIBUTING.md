@@ -1,125 +1,222 @@
 # Contributing to Travel Weather Assistant
 
-Thank you for your interest in contributing to the Travel Weather Assistant project! This document provides guidelines and instructions for contributing.
+## Getting Started
 
-## Code of Conduct
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/chattbboott.git`
+3. Create a feature branch: `git checkout -b feature/your-feature-name`
+4. Install dependencies: `npm install`
 
-By participating in this project, you agree to abide by our Code of Conduct.
+## Development Workflow
 
-## How to Contribute
+### Branch Strategy
 
-### Reporting Bugs
+- `main`: Production branch
+- `develop`: Development integration branch
+- `feature/*`: Feature branches
+- `bugfix/*`: Bug fix branches
+- `hotfix/*`: Production hotfix branches
 
-Before creating bug reports, please check the issue list as you might find out that you don't need to create one. When you are creating a bug report, please include as many details as possible:
+### Commit Messages
 
-* Use a clear and descriptive title
-* Describe the exact steps which reproduce the problem
-* Provide specific examples to demonstrate the steps
-* Describe the behavior you observed after following the steps
-* Explain which behavior you expected to see instead and why
-* Include screenshots and animated GIFs if possible
+Follow the conventional commits specification:
 
-### Suggesting Enhancements
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation
+- `style`: Code style changes
+- `refactor`: Code refactoring
+- `test`: Testing
+- `chore`: Maintenance
 
-Enhancement suggestions are tracked as GitHub issues. Create an issue and provide the following information:
-
-* Use a clear and descriptive title
-* Provide a step-by-step description of the suggested enhancement
-* Provide specific examples to demonstrate the steps
-* Describe the current behavior and explain which behavior you expected to see instead
-* Explain why this enhancement would be useful
-
-### Pull Requests
-
-* Fill in the required template
-* Do not include issue numbers in the PR title
-* Include screenshots and animated GIFs in your pull request whenever possible
-* Follow the JavaScript styleguides
-* End all files with a newline
-
-## Development Process
-
-1. Fork the repo and create your branch from `develop`
-2. If you've added code that should be tested, add tests
-3. If you've changed APIs, update the documentation
-4. Ensure the test suite passes
-5. Make sure your code lints
-6. Issue that pull request!
-
-## Project Structure
-
+Example:
 ```
-src/
-├── index.html          # Main HTML file
-├── css/
-│   └── styles.css     # Styling
-└── js/
-    ├── weather.js     # Weather API integration
-    ├── trip.js        # Trip planning logic
-    ├── chat.js        # Chat functionality
-    └── ui.js          # UI management
-
-tests/
-├── setup.js           # Test setup
-├── weather.test.js    # Weather service tests
-├── trip.test.js       # Trip planner tests
-├── chat.test.js       # Chat manager tests
-└── ui.test.js         # UI manager tests
+feat(ui): add dark mode support
 ```
 
-## Testing
+### Pull Request Process
 
-Before submitting a pull request, please make sure you have:
+1. Update your feature branch with the latest changes from develop:
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git checkout feature/your-feature-name
+   git rebase develop
+   ```
 
-1. Added tests for new functionality
-2. Updated existing tests if needed
-3. Run the test suite and ensured all tests pass
-4. Checked test coverage meets requirements
+2. Push your changes:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-## Styleguides
+3. Create a pull request:
+   - Use the PR template
+   - Link related issues
+   - Request reviews
+   - Add appropriate labels
 
-### Git Commit Messages
+4. Address review comments:
+   - Make requested changes
+   - Push updates
+   - Request re-review
 
-* Use the present tense ("Add feature" not "Added feature")
-* Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-* Limit the first line to 72 characters or less
-* Reference issues and pull requests liberally after the first line
-* Consider starting the commit message with an applicable emoji:
-    * 🎨 `:art:` when improving the format/structure of the code
-    * 🐎 `:racehorse:` when improving performance
-    * 🚱 `:non-potable_water:` when plugging memory leaks
-    * 📝 `:memo:` when writing docs
-    * 🐛 `:bug:` when fixing a bug
-    * 🔥 `:fire:` when removing code or files
-    * 💚 `:green_heart:` when fixing the CI build
-    * ✅ `:white_check_mark:` when adding tests
-    * 🔒 `:lock:` when dealing with security
-    * ⬆️ `:arrow_up:` when upgrading dependencies
-    * ⬇️ `:arrow_down:` when downgrading dependencies
+5. After approval:
+   - Squash and merge
+   - Delete feature branch
 
-### JavaScript Styleguide
+## Code Standards
 
-* Use 2 spaces for indentation
-* Use semicolons
-* Use single quotes for strings
-* Use meaningful variable and function names
-* Follow the Airbnb JavaScript Style Guide
+### JavaScript
 
-### CSS Styleguide
+- Use ES6+ features
+- Follow ESLint configuration
+- Add JSDoc comments for functions
+- Maximum line length: 100 characters
 
-* Use BEM naming convention
-* Follow mobile-first approach
-* Use CSS variables for theming
-* Keep styles modular and reusable
+### HTML/CSS
+
+- Use semantic HTML
+- Follow BEM naming convention
+- Maintain responsive design
+- Support dark mode
+
+### Testing
+
+- Write unit tests for new features
+- Maintain minimum 85% coverage
+- Test edge cases
+- Add integration tests when needed
 
 ## Documentation
 
-* Keep documentation up to date
-* Use clear and concise language
-* Include examples where appropriate
-* Add screenshots for UI changes
-* Update the README.md if needed
+### Code Documentation
 
-## Questions?
+- Add JSDoc comments for functions
+- Document complex algorithms
+- Explain non-obvious solutions
+- Update API documentation
 
-Feel free to open an issue for any questions or concerns you may have. 
+### Project Documentation
+
+- Update README.md when needed
+- Document new features
+- Add setup instructions
+- Update troubleshooting guide
+
+## Review Process
+
+### Code Review Guidelines
+
+1. Code Quality
+   - Clean and readable
+   - Well-documented
+   - Follows standards
+   - No unnecessary complexity
+
+2. Testing
+   - Adequate test coverage
+   - Edge cases handled
+   - Tests pass
+   - No regression
+
+3. Documentation
+   - Updated docs
+   - Clear comments
+   - API documentation
+   - Usage examples
+
+4. Performance
+   - No performance issues
+   - Efficient algorithms
+   - Resource usage
+   - Load testing
+
+### Review Checklist
+
+- [ ] Code follows standards
+- [ ] Tests are included
+- [ ] Documentation is updated
+- [ ] No linting errors
+- [ ] Performance is acceptable
+- [ ] Security considerations
+- [ ] Accessibility maintained
+- [ ] Cross-browser compatibility
+
+## Issue Management
+
+### Creating Issues
+
+- Use issue templates
+- Add appropriate labels
+- Provide reproduction steps
+- Include expected behavior
+
+### Issue Labels
+
+- `bug`: Bug reports
+- `feature`: Feature requests
+- `documentation`: Documentation updates
+- `enhancement`: Improvements
+- `help wanted`: Need assistance
+- `good first issue`: Beginner-friendly
+
+## Development Setup
+
+### Requirements
+
+- Node.js 14+
+- npm 6+
+- Git
+- Modern web browser
+
+### Environment Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Add your API keys:
+   ```
+   OPENWEATHER_API_KEY=your_api_key
+   ```
+
+4. Start development server:
+   ```bash
+   npm start
+   ```
+
+### Testing
+
+Run tests:
+```bash
+npm test                 # Run all tests
+npm run test:watch      # Watch mode
+npm run test:coverage   # Coverage report
+```
+
+## Release Process
+
+1. Update version in package.json
+2. Update CHANGELOG.md
+3. Create release branch
+4. Run tests and checks
+5. Create release PR
+6. After merge, tag release
+7. Deploy to production
+
+## Support
+
+- Create issues for bugs
+- Join discussions
+- Help other contributors
+- Improve documentation
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the project's MIT License. 
